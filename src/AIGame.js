@@ -1,5 +1,3 @@
-const AIPlayer = require("../AIP/AIPlayer.js");
-
 class AIGame {
 	constructor() {
 

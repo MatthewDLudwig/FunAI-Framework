@@ -1,6 +1,6 @@
 {
-  "name": "funaiframework",
-  "version": "1.0.1",
+  "name": "funai-framework",
+  "version": "1.0.0",
   "description": "A relatively simple framework for creating bots that play games with the ability to add AI/ML throughout the bot's decision making process",
   "main": "src/index.js",
   "scripts": {
@@ -8,16 +8,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/MatthewDLudwig/FunAIFramework.git"
+    "url": "git+https://github.com/MatthewDLudwig/FunAI-Framework.git"
   },
   "author": "Matthew Ludwig",
   "license": "Apache-2.0",
   "bugs": {
-    "url": "https://github.com/MatthewDLudwig/FunAIFramework/issues"
+    "url": "https://github.com/MatthewDLudwig/FunAI-Framework/issues"
   },
-  "homepage": "https://github.com/MatthewDLudwig/FunAIFramework#readme",
+  "homepage": "https://github.com/MatthewDLudwig/FunAI-Framework#readme",
   "dependencies": {
-    "pngjs": "^5.0.0",
-    "puppeteer": "^3.0.1"
   }
 }

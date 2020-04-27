@@ -1,7 +1,6 @@
 module.exports = {
-	AIGame : require("./AIG/AIGame.js"),
-	BrowserGame : require("./AIG/BrowserGame.js"),
-	AIPlayer : require("./AIP/AIPlayer.js"),
-	BrowserPlayer : require("./AIP/BrowserPlayer.js"),
-	TestPlayer : require("./AIP/TestPlayer.js"),
+	AIGame : require("./AIGame.js"),
+	AIBrain : require("./AIBrain.js"),
+	AIPlayer : require("./AIPlayer.js"),
+	TestPlayer : require("./TestPlayer.js")
 };

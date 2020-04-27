@@ -1,4 +1,4 @@
-class AIPlayer {
+class AIBrain {
 	static weightChoices(choices, weightDefinition) {
 		return choices.map(choice => {
 			let weight = 0;
@@ -63,18 +63,22 @@ class AIPlayer {
 	// Trys attemptsPerGen different variations each gamesPerGen times to get an average score.
 	// Sorts by score (highest first) and drops out the bottom dropoutRate of attempts.
 	static geneticOptimizer(targetWeights, gamesPerGen = 10, attemptsPerGen = 10, dropoutRate = 0.5, nudgeSpeed = 0.25, optimizeLowerScore = false) {
+		const generationNames = Array.from({ length : 26 }, (it, i) => String.fromCharCode("A".charCodeAt(0) + i));
+
 		let obj = { };
 		obj.originalWeights = targetWeights.map(it => it.weight);
 		obj.scores = [];
 
+		obj.counter = 0;
+		obj.generations = 0;
 		obj.baseChanges = obj.originalWeights.map(it => 0);
 		obj.attempts = Array.from({ length : attemptsPerGen }, (it, i) => {
 			return {
+				name : generationNames[obj.generations] + i.toString().padStart(attemptsPerGen.toString().length, "0"),
 				changes : obj.baseChanges.map(it => i == 0 ? 0 : (it + nudgeSpeed * (Math.random() + Math.random() - 1))),
 				score : 0
 			};
 		});
-		obj.counter = 0;
 
 		obj.originalWeights.forEach((it, i) => {
 			targetWeights[i].weight = it + (it * obj.attempts[0].changes[i]);
@@ -90,7 +94,7 @@ class AIPlayer {
 			let averageScore = this.scores.reduce((t, c) => t + c, 0) / this.scores.length;
 
 			if (this.scores.length >= gamesPerGen) {
-				console.log("Average score is: " + averageScore.toFixed(4).padStart(9, 0))
+				console.log(this.attempts[this.counter].name + " - Average score is: " + averageScore.toFixed(4).padStart(9, 0))
 				this.attempts[this.counter++].score = averageScore;
 				this.scores = [];
 
@@ -105,17 +109,19 @@ class AIPlayer {
 
 					// Generation done, decide next generation.
 					let sortedAttempts = this.attempts.sort((a, b) => (this.multiplier * b.score) - (this.multiplier * a.score));
-					let keeping = sortedAttempts.slice(0, Math.floor(sortedAttempts.length * 0.5)).map(it => it.changes);
+					let keeping = sortedAttempts.slice(0, Math.floor(sortedAttempts.length * 0.5));
 
 					if (keeping.length) {
-						this.baseChanges = keeping.reduce((t, c) => {
+						this.baseChanges = keeping.map(it => it.changes).reduce((t, c) => {
 							return t.map((it, i) => it + c[i]);
-						}, keeping[0].map(it => 0)).map(it => it / keeping.length);
+						}, keeping[0].changes.map(it => 0)).map(it => it / keeping.length);
 					}
 
+					this.generations++;
 					this.attempts = Array.from({ length : attemptsPerGen }, (it, i) => {
 						return {
-							changes : i < keeping.length ? keeping[i] : this.baseChanges.map(it => it + nudgeSpeed * (Math.random() + Math.random() - 1)),
+							name : i < keeping.length ? keeping[i].name : generationNames[this.generations] + i.toString().padStart(attemptsPerGen.toString().length, "0"),
+							changes : i < keeping.length ? keeping[i].changes : this.baseChanges.map(it => it + nudgeSpeed * (Math.random() + Math.random() - 1)),
 							score : 0
 						};
 					});
@@ -132,72 +138,19 @@ class AIPlayer {
 		return obj;
 	}
 
-	static createWeightOptimizer(weights, optimizer = AIPlayer.naiveOptimizer, ...options) {
+	static createWeightOptimizer(weights, optimizer = AIBrain.naiveOptimizer, ...options) {
 		return optimizer(weights, ...options);
 	}
 
-	// controller - anything - what will be stored in state.controller to be used by functions.
-	// viewWorld  - function - Called to obtain a PNG image of the world that should be perceived.
-	// perceive   - function - ...
-	// ...
-	constructor(controller, viewWorld, perceive, think, decide, act, learn, initialState = { }) {
-		this.state = {
-			controller
-		};
-
-		Object.entries(initialState).forEach(entry => {
-			if (entry[0] != "page") {
-				this.state[entry[0]] = entry[1];
-			}
-		});
-
-		this.running = false;
-		this.tick = async (shouldAct = true) => {
-			let start = Date.now();
-
-			let img = await viewWorld();
-
-			let perception = await perceive(this.state, img);
-			let thoughts = await think(this.state, perception);
-			let decision = await decide(this.state, thoughts);
-
-			if (shouldAct) {
-				let feedback = await act(this.state, decision);
-				await learn(this.state, feedback, decision, thoughts, perception, img);
-			}
-
-			return {
-				perception,
-				thoughts,
-				decision,
-				diff : Date.now() - start
-			};
-		};
-
-		this.silent = false;
+	constructor(controller) {
+		this.controller = controller;
 	}
 
-	async run(ticksPerSecond = 0, shouldAct = !!this.state.controller) {
-		const tickTime = ticksPerSecond ? (1000 / ticksPerSecond) : 0;
-		this.running = true;
-
-		const tickFunction = async () => {
-			if (this.running) {
-				let result = await this.tick(shouldAct);
-				if (!this.silent) console.log("Took " + result.diff + " ms");
-
-				if (tickTime) {
-					setTimeout(tickFunction, Math.max(0, tickTime - result.diff));
-				} else {
-					this.running = false;
-				}
-
-				return result;
-			}
-		};
-
-		return await tickFunction();
-	}
+	perceive(img) { }
+	think(perception) { }
+	decide(thoughts) { }
+	act(img) { }
+	learn(img) { }
 }
 
-module.exports = AIPlayer;
+module.exports = AIBrain;
